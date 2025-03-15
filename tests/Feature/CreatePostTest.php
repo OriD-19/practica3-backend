@@ -68,16 +68,16 @@ test('Validate same post slug', function () {
     $this->actingAs($user);
 
     $existingPost = Post::factory()
-    ->for($user)
-    ->has(Category::factory()->count(1))
-    ->create();
+        ->for($user)
+        ->has(Category::factory()->count(1))
+        ->create();
 
     $post = Post::factory()
         ->for($user)
         ->has(Category::factory()->count(rand(1, 5)))
         ->make(['title' => $existingPost->title]);
 
-    $response = $this->postJson('/api/posts', [
+    $response = $this->postJson('/api/v1/posts', [
         'title' => $post->title,
         'excerpt' => $post->excerpt,
         'content' => $post->content,
@@ -87,4 +87,22 @@ test('Validate same post slug', function () {
     $response->assertStatus(201)
         ->assertJsonStructure(['id', 'title', 'slug'])
         ->assertJsonFragment(['title' => $post->title]);
+});
+
+test('Authentication error when creating post', function () {
+    $user = User::factory()->create(); // creating a user, but not authenticating it
+
+    $post = Post::factory()
+    ->for($user)
+    ->has(Category::factory()->count(3))
+    ->make(); // make does not persist the post into the database
+
+    $response = $this->postJson('/api/v1/posts', [
+        'title' => $post->title,
+        'excerpt' => $post->excerpt,
+        'content' => $post->content,
+        'categories' => Category::factory()->count(1)->create()->pluck('id')->toArray(),
+    ]);
+
+    $response->assertStatus(401);
 });
