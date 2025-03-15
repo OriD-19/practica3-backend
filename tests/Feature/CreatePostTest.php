@@ -74,8 +74,9 @@ test('Validate same post slug', function () {
 
     $post = Post::factory()
         ->for($user)
-        ->has(Category::factory()->count(rand(1, 5)))
-        ->make(['title' => $existingPost->title]);
+        ->has(Category::factory()->count(2))
+        ->state(['title' => $existingPost->title])
+        ->create();
 
     $response = $this->postJson('/api/v1/posts', [
         'title' => $post->title,
