@@ -61,3 +61,30 @@ test('Validate post details', function () {
     $response->assertStatus(422)
         ->assertJsonValidationErrors(['title', 'content']); //creo que es asi askdfdkkf
 });
+
+test('Validate same post slug', function () {
+
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    $existingPost = Post::factory()
+    ->for($user)
+    ->has(Category::factory()->count(1))
+    ->create();
+
+    $post = Post::factory()
+        ->for($user)
+        ->has(Category::factory()->count(rand(1, 5)))
+        ->make(['title' => $existingPost->title]);
+
+    $response = $this->postJson('/api/posts', [
+        'title' => $post->title,
+        'excerpt' => $post->excerpt,
+        'content' => $post->content,
+        'categories' => $post->categories->pluck('id')->toArray(),
+    ]);
+
+    $response->assertStatus(201)
+        ->assertJsonStructure(['id', 'title', 'slug'])
+        ->assertJsonFragment(['title' => $post->title]);
+});
