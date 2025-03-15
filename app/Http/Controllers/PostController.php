@@ -14,7 +14,15 @@ class PostController extends Controller
 
     public static function createSlug(string $title)
     {
-        return "jaja";
+        $slug = Str::of($title)->slug('-');
+
+        // lookup for the slug that matched anything that ends with '-n',
+        // where 'n' is any number that corresponds with the correlative of the slug
+        $results = DB::table('posts')
+            ->where('slug', 'like', $slug . '%')
+            ->get();
+
+        return $slug . strval(count($results)); // Always increases by one in relation to the last repeated title
     }
 
     /**
