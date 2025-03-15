@@ -11,6 +11,8 @@ class Category extends Model
     /** @use HasFactory<\Database\Factories\CategoryFactory> */
     use HasFactory;
 
+    protected $hidden = ['pivot'];
+
     public function posts(): BelongsToMany {
         return $this->belongsToMany(Post::class);
     }

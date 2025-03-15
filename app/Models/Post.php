@@ -12,6 +12,18 @@ class Post extends Model
     /** @use HasFactory<\Database\Factories\PostFactory> */
     use HasFactory;
 
+    protected $fillable = [
+        'title',
+        'slug',
+        'excerpt',
+        'content',
+        'user_id'
+    ];
+
+    protected $hidden = [
+        'user_id',
+    ];
+
     public function categories(): BelongsToMany {
         return $this->belongsToMany(Category::class);
     }

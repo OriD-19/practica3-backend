@@ -13,7 +13,74 @@ test('Create a post successfully', function () {
 
     $post = Post::factory()
         ->for($user)
-        ->has(Category::factory()->count(rand(1, 5)))
+        ->has(Category::factory()->count(rand(1, 3)))
+        ->create();
+
+    $response = $this->postJson('/api/v1/posts', [
+        'title' => $post->title,
+        'excerpt' => $post->excerpt,
+        'content' => $post->content,
+        'categories' => $post->categories->pluck('id')->toArray(),
+    ]);
+
+    $response->dump();
+
+    $response->assertStatus(201)
+        ->assertExactJsonStructure([
+            'id',
+            'title',
+            'slug',
+            'excerpt',
+            'content',
+            'categories' => [
+                "*" => ["id", "name"]
+            ],
+            'user' => [
+                "id", "name", "email"
+            ],
+            'created_at',
+            'updated_at'
+        ]);
+});
+
+test('Validate post details', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    $post = Post::factory()
+        ->for($user)
+        ->has(Category::factory()->count(3))
+        ->create();
+
+    // remove both the title and the content (not the only validations)
+    $post->title = "";
+    $post->content = "";
+
+    $response = $this->postJson('/api/v1/posts', [
+        'title' => $post->title,
+        'excerpt' => $post->excerpt,
+        'content' => $post->content,
+        'categories' => $post->categories->pluck('id')->toArray(),
+    ]);
+
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['title', 'content']); //creo que es asi askdfdkkf
+});
+
+test('Validate same post slug', function () {
+
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    $existingPost = Post::factory()
+        ->for($user)
+        ->has(Category::factory()->count(1))
+        ->create();
+
+    $post = Post::factory()
+        ->for($user)
+        ->has(Category::factory()->count(2))
+        ->state(['title' => $existingPost->title])
         ->create();
 
     $response = $this->postJson('/api/v1/posts', [
@@ -24,16 +91,24 @@ test('Create a post successfully', function () {
     ]);
 
     $response->assertStatus(201)
-        ->assertJsonStructure([
-            'id',
-            'title',
-            'slug',
-            'excerpt',
-            'content',
-            'categories',
-            'user',
-            'created_at',
-            'updated_at'
-        ])
-        ->assertJsonFragment(['title' => $post->title, 'excerpt' => $post->excerpt]);
+        ->assertJsonStructure(['id', 'title', 'slug'])
+        ->assertJsonFragment(['title' => $post->title]);
+});
+
+test('Authentication error when creating post', function () {
+    $user = User::factory()->create(); // creating a user, but not authenticating it
+
+    $post = Post::factory()
+    ->for($user)
+    ->has(Category::factory()->count(3))
+    ->make(); // make does not persist the post into the database
+
+    $response = $this->postJson('/api/v1/posts', [
+        'title' => $post->title,
+        'excerpt' => $post->excerpt,
+        'content' => $post->content,
+        'categories' => Category::factory()->count(1)->create()->pluck('id')->toArray(),
+    ]);
+
+    $response->assertStatus(401);
 });
