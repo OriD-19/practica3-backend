@@ -23,19 +23,24 @@ test('Create a post successfully', function () {
         'categories' => $post->categories->pluck('id')->toArray(),
     ]);
 
+    $response->dump();
+
     $response->assertStatus(201)
-        ->assertJsonStructure([
+        ->assertExactJsonStructure([
             'id',
             'title',
             'slug',
             'excerpt',
             'content',
-            'categories',
-            'user',
+            'categories' => [
+                "*" => ["id", "name"]
+            ],
+            'user' => [
+                "id", "name", "email"
+            ],
             'created_at',
             'updated_at'
-        ])
-        ->assertJsonFragment(['title' => $post->title, 'excerpt' => $post->excerpt]);
+        ]);
 });
 
 test('Validate post details', function () {

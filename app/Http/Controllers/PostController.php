@@ -30,7 +30,14 @@ class PostController extends Controller
      */
     public function index(Request $request)
     {
-        //
+
+        /** @var \App\Models\User */
+        $user = Auth::user();
+        $posts = DB::table('posts')
+            ->where('user_id', '=', $user->id)
+            ->get();
+
+        return $posts;
     }
 
     /**
@@ -50,6 +57,7 @@ class PostController extends Controller
         $user->posts()->save($post);
         $post->categories()->sync($data['categories']);
 
-        return response()->json(Post::with(['user', 'categories'])->where('id', $post->id)->first(), 201);
+        return response()->json(Post::with(['user:id,name,email', 'categories:id,name'])
+            ->where('id', $post->id)->first(), 201);
     }
 }

@@ -20,6 +20,10 @@ class Post extends Model
         'user_id'
     ];
 
+    protected $hidden = [
+        'user_id',
+    ];
+
     public function categories(): BelongsToMany {
         return $this->belongsToMany(Category::class);
     }

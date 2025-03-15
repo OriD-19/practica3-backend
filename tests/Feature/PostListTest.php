@@ -6,7 +6,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-it('Lista todas las publicaciones del usuario autenticado', function () {
+it('List all posts from the authenticated user', function () {
     $user = User::factory()->create();
     $this->actingAs($user);
 
@@ -16,12 +16,14 @@ it('Lista todas las publicaciones del usuario autenticado', function () {
 
     $response->assertStatus(200)
         ->assertJsonCount(2)
-        ->assertJsonStructure(
-            ['id', 'title', 'slug', 'excerpt', 'categories', 'user', 'created_at']
+        ->assertJsonStructure( // each item inside the list has the following structure
+            [
+                '*' => ['id', 'title', 'slug', 'excerpt', 'categories', 'user', 'created_at'],
+            ]
         );
 });
 
-it('Lista todas las publicaciones con un filtro de búsqueda', function () {
+it('List all posts from user with filters', function () {
     $user = User::factory()->create();
     $this->actingAs($user);
 
@@ -37,7 +39,7 @@ it('Lista todas las publicaciones con un filtro de búsqueda', function () {
         ->assertJsonFragment(['title' => 'Mi nueva publicación']);
 });
 
-it('Retorna un error de autenticación si el usuario no está identificado', function () {
+it('Return an authentication error for unauthorized users', function () {
     $response = $this->getJson('/api/v1/posts');
 
     $response->assertStatus(401);
