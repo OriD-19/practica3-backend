@@ -20,7 +20,7 @@ class PostController extends Controller
     public function store(Request $request)
     {
         //
-        return $request->input('title');
+        return $request->all();
     }
 
 }

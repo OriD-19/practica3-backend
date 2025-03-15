@@ -1,21 +1,39 @@
 <?php
 
+use App\Models\Category;
 use App\Models\Post;
 use App\Models\User;
-use Database\Factories\PostFactory;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(RefreshDatabase::class);
 
 test('Create a post successfully', function () {
-
     $user = User::factory()->create();
-    $post = Post::factory()->for($user)->create();
+    $this->actingAs($user);
 
-    $response = $this->post('/api/v1/posts', [
+    $post = Post::factory()
+        ->for($user)
+        ->has(Category::factory()->count(rand(1, 5)))
+        ->create();
+
+    $response = $this->postJson('/api/v1/posts', [
         'title' => $post->title,
         'excerpt' => $post->excerpt,
         'content' => $post->content,
-        'categories' => $post->categories,
+        'categories' => $post->categories->pluck('id')->toArray(),
     ]);
 
-    $response->dump();
-    $response->assertStatus(200);
+    $response->assertStatus(201)
+        ->assertJsonStructure([
+            'id',
+            'title',
+            'slug',
+            'excerpt',
+            'content',
+            'categories',
+            'user',
+            'created_at',
+            'updated_at'
+        ])
+        ->assertJsonFragment(['title' => $post->title, 'excerpt' => $post->excerpt]);
 });
