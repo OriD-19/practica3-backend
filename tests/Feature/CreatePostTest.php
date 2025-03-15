@@ -23,8 +23,6 @@ test('Create a post successfully', function () {
         'categories' => $post->categories->pluck('id')->toArray(),
     ]);
 
-    $response->dump();
-
     $response->assertStatus(201)
         ->assertExactJsonStructure([
             'id',
