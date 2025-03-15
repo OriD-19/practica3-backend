@@ -44,11 +44,12 @@ class PostController extends Controller
         /** @var \App\Models\User */
         $user = Auth::user();
 
+        /** @var \App\Models\Post */
         $post = Post::create($data);
 
-        $post->user()->save($user);
+        $user->posts()->save($post);
         $post->categories()->sync($data['categories']);
 
-        return response()->json($post);
+        return response()->json(Post::with(['user', 'categories'])->where('id', $post->id)->first(), 201);
     }
 }

@@ -17,6 +17,7 @@ class Post extends Model
         'slug',
         'excerpt',
         'content',
+        'user_id'
     ];
 
     public function categories(): BelongsToMany {
