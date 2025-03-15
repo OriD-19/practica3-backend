@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\PostRequest;
+use App\Models\Category;
 use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -31,11 +32,42 @@ class PostController extends Controller
     public function index(Request $request)
     {
 
+        $search = $request->query('search');
+
         /** @var \App\Models\User */
         $user = Auth::user();
-        $posts = DB::table('posts')
-            ->where('user_id', '=', $user->id)
-            ->get();
+
+        $posts = [];
+        if ($search) {
+            $posts = Post::where('user_id', '=', $user->id) // first condition: user
+                ->where(function ($query) use ($search) { // second condition: match search with title or content
+                    $query
+                        ->where('title', 'like', '%' . $search . '%')
+                        ->orWhere('content', 'like', '%' . $search . '%');
+                })
+                ->get();
+        } else {
+            $posts = Post::where('user_id', '=', $user->id)->get(['id', 'title', 'slug', 'excerpt', 'created_at']);
+        }
+
+
+        foreach ($posts as &$post) {
+            $post['user'] = $user->name;
+
+            $category_names = [];
+
+            $categories = Category::with('posts') // get all the categories associated with a post
+                ->whereHas('posts', function ($q) use ($post) {
+                    $q->where('post_id', '=', $post['id']);
+                })
+                ->get(['name']);
+
+            foreach ($categories as $category) {
+                array_push($category_names, $category['name']);
+            }
+
+            $post['categories'] = $category_names;
+        }
 
         return $posts;
     }
