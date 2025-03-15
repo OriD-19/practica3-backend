@@ -37,3 +37,27 @@ test('Create a post successfully', function () {
         ])
         ->assertJsonFragment(['title' => $post->title, 'excerpt' => $post->excerpt]);
 });
+
+test('Validate post details', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    $post = Post::factory()
+        ->for($user)
+        ->has(Category::factory()->count(3))
+        ->create();
+
+    // remove both the title and the content (not the only validations)
+    $post->title = "";
+    $post->content = "";
+
+    $response = $this->postJson('/api/v1/posts', [
+        'title' => $post->title,
+        'excerpt' => $post->excerpt,
+        'content' => $post->content,
+        'categories' => $post->categories->pluck('id')->toArray(),
+    ]);
+
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['title', 'content']); //creo que es asi askdfdkkf
+});
