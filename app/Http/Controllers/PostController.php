@@ -43,6 +43,7 @@ class PostController extends Controller
 
         /** @var \App\Models\User */
         $user = Auth::user();
+
         $post = Post::create($data);
 
         $post->user()->save($user);

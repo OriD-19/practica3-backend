@@ -13,7 +13,7 @@ test('Create a post successfully', function () {
 
     $post = Post::factory()
         ->for($user)
-        ->has(Category::factory()->count(rand(1, 5)))
+        ->has(Category::factory()->count(rand(1, 3)))
         ->create();
 
     $response = $this->postJson('/api/v1/posts', [
