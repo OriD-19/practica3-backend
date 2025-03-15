@@ -3,10 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\PostRequest;
+use App\Models\Post;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class PostController extends Controller
 {
+
+    public static function createSlug(string $title)
+    {
+        return "jaja";
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -20,9 +30,16 @@ class PostController extends Controller
      */
     public function store(PostRequest $request)
     {
-        $validated = $request->validated();
+        $data = $request->validated();
+        $data['slug'] = PostController::createSlug($data['title']);
 
-        return $request->all();
+        /** @var \App\Models\User */
+        $user = Auth::user();
+        $post = Post::create($data);
+
+        $post->user()->save($user);
+        $post->categories()->sync($data['categories']);
+
+        return response()->json($post);
     }
-
 }
